@@ -1,0 +1,37 @@
+Package: consensusTADs
+Title: Generate Consensus Topologically Associating Domains from Multiple Prediction Tools
+Version: 0.1.0
+Authors@R:
+    person(given = "Pumin",
+           family = "Li",
+           role = c("aut", "cre"),
+           email = "pumin.li@unil.ch",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Integrates Topologically Associating Domains (TADs) predictions
+    from multiple computational tools to generate high-confidence consensus TAD sets.
+    The package implements the Measure of Concordance (MoC) metric to quantify
+    agreement between different TAD predictions and uses dynamic programming
+    algorithms to select optimal non-overlapping TAD boundaries. This approach
+    helps resolve inconsistencies between TAD calling methods and produces more
+    reliable chromatin domain annotations for downstream genomic analyses.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    GenomicRanges,
+    IRanges,
+    magrittr,
+    purrr,
+    stringr,
+    tibble,
+    tidyr
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/CSOgroup/consensusTADs
+BugReports: https://github.com/CSOgroup/consensusTADs/issues

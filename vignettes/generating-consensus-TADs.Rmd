@@ -1,0 +1,121 @@
+---
+title: "Generating Consensus TADs with generate_tad_consensus"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Generating Consensus TADs with generate_tad_consensus}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+Topologically Associating Domains (TADs) are fundamental units of chromatin organization that play crucial roles in gene regulation. Multiple computational tools have been developed to predict TAD boundaries from Hi-C data, but their results often vary significantly. The `generate_tad_consensus` function provides a method to integrate predictions from multiple tools and generate a high-confidence consensus TAD set.
+
+## Function Overview
+
+`generate_tad_consensus` creates consensus TADs through an iterative threshold approach that selects optimal non-overlapping TADs representing agreement across different prediction methods. It uses the Measure of Concordance (MoC) score to quantify the level of agreement between predictions from different tools.
+
+## Parameters
+
+```r
+generate_tad_consensus(
+  df_tools,
+  threshold = 0,
+  step = -0.05
+)
+```
+
+* **df_tools**: A data frame containing TAD information with the following required columns:
+* `chr`: Chromosome name
+* `start`: TAD start position
+* `end`: TAD end position
+* `meta.tool`: Identifier for the prediction tool
+
+* **threshold**: A numeric value representing the minimum MoC threshold for filtering, default is 0. Higher thresholds require stronger agreement between different tools.
+
+* **step**: A numeric value used to generate the threshold sequence, default is -0.05. The function starts from 1 and decreases by this step value until reaching the threshold parameter.
+
+## Return Value
+
+The function returns a data frame with the following columns:
+
+* **chr**: Chromosome name
+* **start**: TAD start position
+* **end**: TAD end position
+* **score_source**: A string containing information about the tools that contributed to this TAD and their individual MoC scores
+* **threshold**: The MoC threshold value at which this TAD was selected during the iterative selection process
+
+## Usage Examples
+
+The following examples demonstrate how to use the `generate_tad_consensus` function:
+
+```{r, eval=FALSE}
+# Prepare input data with predictions from multiple tools
+tad_data <- data.frame(
+  chr = rep("chr1", 6),
+  start = c(10000, 20000, 50000, 12000, 22000, 48000),
+  end = c(30000, 45000, 65000, 32000, 43000, 67000),
+  meta.tool = c(rep("tool1", 3), rep("tool2", 3))
+)
+
+# Generate consensus TADs with default parameters
+consensus_results <- generate_tad_consensus(tad_data)
+print(consensus_results)
+
+# Generate consensus TADs with custom threshold values
+custom_consensus <- generate_tad_consensus(
+  tad_data,
+  threshold = 0.3,
+  step = -0.1
+)
+print(custom_consensus)
+```
+
+## How It Works
+
+The `generate_tad_consensus` function follows these steps:
+
+1. **Input validation**: Check if the input contains data from multiple prediction tools. If only one tool is present, the function returns the original data.
+
+2. **Data preparation**: Split the input data by chromosome.
+
+3. **Threshold sequence generation**: Create a sequence of threshold values from 1 down to the specified threshold parameter using the step size.
+
+4. **Iterative TAD selection**: For each chromosome, apply the `select_tads_by_threshold_series` function, which:
+- Iterates through the threshold sequence from high to low
+- For each threshold, calculates MoC scores between TADs using `moc_score_filter`
+- Filters TADs that meet the current threshold
+- Uses dynamic programming (`select_global_optimal_tads`) to select an optimal set of non-overlapping TADs that maximize the total score
+- Records the threshold at which each TAD was selected
+
+5. **Result compilation**: Combine results from all chromosomes and return a data frame with the consensus TADs.
+
+## The Measure of Concordance (MoC) Score
+
+The MoC score quantifies the agreement between two TAD predictions and is calculated as:
+
+$$MoC = \frac{(intersection\_width)^2}{width1 \times width2}$$
+
+Where:
+- `intersection_width` is the length of the overlap between two TADs
+- `width1` and `width2` are the lengths of the two TADs being compared
+
+Higher MoC scores indicate stronger agreement between predictions.
+
+## Dynamic Programming for Optimal TAD Selection
+
+The algorithm uses dynamic programming to select a set of non-overlapping TADs that maximize the total MoC score. This ensures that the consensus TADs represent regions with the strongest evidence across multiple prediction tools while avoiding contradictory overlapping boundaries.
+
+## Important Notes
+
+- Input data must contain predictions from at least two different tools (identified by the `meta.tool` column)
+- The threshold parameter defines the minimum required MoC score and can be adjusted based on analysis needs
+- The returned consensus TADs are guaranteed to be non-overlapping
+
