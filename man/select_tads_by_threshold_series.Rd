@@ -8,7 +8,8 @@ select_tads_by_threshold_series(
   tb_tool_sel,
   threshold_c,
   include_threshold = TRUE,
-  considering_width = TRUE
+  considering_width = TRUE,
+  include_isolated = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ select_tads_by_threshold_series(
 \item{include_threshold}{Logical, whether to include TADs equal to the threshold, default is TRUE}
 
 \item{considering_width}{Logical, whether to adjust scores by TAD width, default is TRUE}
+
+\item{include_isolated}{Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE}
 }
 \value{
 Data frame containing the selected optimal non-overlapping TADs
@@ -42,7 +45,7 @@ tad_data <- data.frame(
 # Select TADs using a series of thresholds
 selected_tads <- select_tads_by_threshold_series(
   tad_data,
-  moc_cut_c = round(seq(1, 0.2, 0.05), 2)
+  threshold_c = round(seq(1, 0.2, -0.05), 2)
 )
 }
 

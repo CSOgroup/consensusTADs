@@ -9,6 +9,8 @@
 #' @param tb_tool_sel Data frame containing TAD coordinates. Must include columns: chr, start, end, meta.tool
 #' @param moc_cut Numeric value, threshold for MoC
 #' @param include_moc_cut Logical, whether to include results equal to MoC threshold, default is TRUE
+#' @param include_isolated Logical, whether to include isolated TADs (with no overlaps) when moc_cut is 0.
+#'   These TADs will have moc_score = 0. Default is FALSE
 #'
 #' @return Data frame containing merged TAD information with calculated MoC scores and the following columns:
 #'   \item{chr}{Character, the chromosome name where the TAD is located}
@@ -21,7 +23,7 @@
 #'
 #' @importFrom GenomicRanges GRanges findOverlaps pintersect width
 #' @importFrom tibble as_tibble
-#' @importFrom dplyr bind_cols select mutate filter arrange group_by summarise ungroup distinct
+#' @importFrom dplyr bind_cols select mutate filter arrange group_by summarise ungroup distinct bind_rows
 #' @importFrom tidyr unite
 #' @importFrom stringr str_split_1
 #'
@@ -37,10 +39,13 @@
 #'
 #' # Calculate MoC
 #' results <- moc_score_filter(tad_data, moc_cut = 0.1)
+#'
+#' # Include isolated TADs when moc_cut is 0
+#' results_with_isolated <- moc_score_filter(tad_data, moc_cut = 0, include_isolated = TRUE)
 #' }
 #'
 #' @export
-moc_score_filter <- function(tb_tool_sel, moc_cut, include_moc_cut = TRUE) {
+moc_score_filter <- function(tb_tool_sel, moc_cut, include_moc_cut = TRUE, include_isolated = FALSE) {
   gr_whole <- GenomicRanges::GRanges(
     tb_tool_sel
   )
@@ -94,13 +99,34 @@ moc_score_filter <- function(tb_tool_sel, moc_cut, include_moc_cut = TRUE) {
     dplyr::mutate(meta.tool = paste0(meta.tool, "_1")) %>%
     tidyr::unite("meta.tool", MoC_source, meta.tool, sep = ", ") %>%
     dplyr::mutate(meta.tool = sapply(meta.tool, process_row)) %>%
-    dplyr::select(start, end, moc_score, meta.tool) %>%
+    dplyr::select(start, end, moc_score, score_source = meta.tool) %>%
     dplyr::distinct() %>%
     dplyr::arrange(-moc_score)
+
+  if (nrow(tb_moc) == 0) {
+    tb_moc <- tb_moc %>%
+      dplyr::mutate(score_source = character(0))
+  }
+
+  if (moc_cut == 0 && include_isolated) {
+    tb_isolated <- tb_tool_sel %>%
+      dplyr::anti_join(
+        tb_moc %>% dplyr::select(start, end),
+        by = c("start", "end")
+      ) %>%
+      dplyr::mutate(
+        moc_score = 0,
+        score_source = paste0(meta.tool, "_1")
+      ) %>%
+      dplyr::select(start, end, moc_score, score_source)
+
+    tb_moc <- dplyr::bind_rows(tb_moc, tb_isolated)
+  }
+
   tad_all <- tb_moc %>%
     dplyr::mutate(
       chr = unique(tb_tool_sel$chr)
-    ) %>%
-    dplyr::rename(score_source = meta.tool)
+    )
+
   return(tad_all)
 }

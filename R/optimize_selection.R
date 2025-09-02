@@ -44,6 +44,12 @@ select_global_optimal_tads <- function(tad_all) {
       dplyr::select(chr, start, end, moc_score, score_source)
     return(res_df)
   }
+  if (max(tad_all$moc_score) == 0) {
+    res_df <- tad_all %>%
+      dplyr::select(chr, start, end, moc_score, score_source)
+    return(res_df)
+  }
+
   tb_input <- tad_all %>%
     dplyr::arrange(end)
   n <- NROW(tb_input)

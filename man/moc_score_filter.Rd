@@ -4,7 +4,12 @@
 \alias{moc_score_filter}
 \title{Calculate and filter Measure of Concordance (MoC) between TADs}
 \usage{
-moc_score_filter(tb_tool_sel, moc_cut, include_moc_cut = TRUE)
+moc_score_filter(
+  tb_tool_sel,
+  moc_cut,
+  include_moc_cut = TRUE,
+  include_isolated = FALSE
+)
 }
 \arguments{
 \item{tb_tool_sel}{Data frame containing TAD coordinates. Must include columns: chr, start, end, meta.tool}
@@ -12,6 +17,9 @@ moc_score_filter(tb_tool_sel, moc_cut, include_moc_cut = TRUE)
 \item{moc_cut}{Numeric value, threshold for MoC}
 
 \item{include_moc_cut}{Logical, whether to include results equal to MoC threshold, default is TRUE}
+
+\item{include_isolated}{Logical, whether to include isolated TADs (with no overlaps) when moc_cut is 0.
+These TADs will have moc_score = 0. Default is FALSE}
 }
 \value{
 Data frame containing merged TAD information with calculated MoC scores and the following columns:
@@ -41,6 +49,9 @@ tad_data <- data.frame(
 
 # Calculate MoC
 results <- moc_score_filter(tad_data, moc_cut = 0.1)
+
+# Include isolated TADs when moc_cut is 0
+results_with_isolated <- moc_score_filter(tad_data, moc_cut = 0, include_isolated = TRUE)
 }
 
 }

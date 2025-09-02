@@ -8,7 +8,8 @@ select_tads_by_threshold(
   tb_tool_sel,
   threshold,
   include_threshold = TRUE,
-  considering_width = TRUE
+  considering_width = TRUE,
+  include_isolated = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ select_tads_by_threshold(
 \item{include_threshold}{Logical, whether to include TADs equal to the threshold, default is TRUE}
 
 \item{considering_width}{Logical, whether to adjust scores by TAD width, default is TRUE}
+
+\item{include_isolated}{Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE}
 }
 \value{
 Data frame containing the selected optimal non-overlapping TADs

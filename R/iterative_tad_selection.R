@@ -10,6 +10,7 @@
 #' @param threshold_c Numeric vector, series of decreasing MoC thresholds
 #' @param include_threshold Logical, whether to include TADs equal to the threshold, default is TRUE
 #' @param considering_width Logical, whether to adjust scores by TAD width, default is TRUE
+#' @param include_isolated Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE
 #'
 #' @return Data frame containing the selected optimal non-overlapping TADs
 #'
@@ -31,20 +32,22 @@
 #' # Select TADs using a series of thresholds
 #' selected_tads <- select_tads_by_threshold_series(
 #'   tad_data,
-#'   moc_cut_c = round(seq(1, 0.2, 0.05), 2)
+#'   threshold_c = round(seq(1, 0.2, -0.05), 2)
 #' )
 #' }
 #'
 #' @export
 select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
-                                            include_threshold = TRUE, considering_width = TRUE) {
+                                            include_threshold = TRUE, considering_width = TRUE,
+                                            include_isolated = FALSE) {
   threshold_c <- sort(threshold_c, decreasing = TRUE)
   res_list <- vector("list", length(threshold_c))
   data_input_list <- vector("list", length(threshold_c))
   data_input_list[[1]] <- tb_tool_sel
   for (i in seq(threshold_c)) {
     res_list[[i]] <- select_tads_by_threshold(data_input_list[[i]],
-                                              threshold_c[i], include_threshold, considering_width) %>%
+                                              threshold_c[i], include_threshold, considering_width,
+                                              include_isolated) %>%
       dplyr::mutate(threshold = threshold_c[i])
     if (NROW(res_list[[i]]) == 0) {
       data_input_list[[i + 1]] <- data_input_list[[i]]
@@ -73,6 +76,7 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
 #' @param threshold Numeric value, threshold for filtering TADs based on MoC score
 #' @param include_threshold Logical, whether to include TADs equal to the threshold, default is TRUE
 #' @param considering_width Logical, whether to adjust scores by TAD width, default is TRUE
+#' @param include_isolated Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE
 #'
 #' @return Data frame containing the selected optimal non-overlapping TADs
 #'
@@ -93,8 +97,9 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
 #' }
 #'
 #' @export
-select_tads_by_threshold <- function(tb_tool_sel, threshold, include_threshold = TRUE, considering_width = TRUE) {
-  tad_all <- moc_score_filter(tb_tool_sel, threshold, include_threshold)
+select_tads_by_threshold <- function(tb_tool_sel, threshold, include_threshold = TRUE,
+                                     considering_width = TRUE, include_isolated = FALSE) {
+  tad_all <- moc_score_filter(tb_tool_sel, threshold, include_threshold, include_isolated)
   if (considering_width) {
     tad_all <- tad_all %>%
       dplyr::mutate(moc_score = moc_score * (end + 1 - start) / 10000)

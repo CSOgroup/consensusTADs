@@ -4,7 +4,15 @@
 \alias{generate_tad_consensus}
 \title{Generate consensus TADs from multiple tool predictions}
 \usage{
-generate_tad_consensus(df_tools, threshold = 0, step = -0.05)
+generate_tad_consensus(
+  df_tools,
+  threshold = 0,
+  step = -0.05,
+  split_vars = c("chr"),
+  core_number = 1,
+  include_isolated = FALSE,
+  .skip_plan_setup = FALSE
+)
 }
 \arguments{
 \item{df_tools}{Data frame containing TAD information with columns: chr, start, end, meta.tool
@@ -14,6 +22,18 @@ where meta.tool identifies the prediction tool source}
 
 \item{step}{Numeric vector, sequence of threshold values to use in the iterative
 selection process, default is -0.05}
+
+\item{split_vars}{Character vector, variables to split data by for parallel processing,
+default is c("chr")}
+
+\item{core_number}{Integer, number of CPU cores to use for parallel processing.
+If set to 1 (default), sequential processing is used. If greater than 1,
+parallel processing with the specified number of cores is enabled}
+
+\item{include_isolated}{Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE}
+
+\item{.skip_plan_setup}{Logical, internal parameter to skip future plan setup.
+Used when called from hierarchy function. Default is FALSE}
 }
 \value{
 Data frame containing both the original tool TADs and consensus TADs with additional
