@@ -9,9 +9,8 @@ generate_tad_consensus(
   threshold = 0,
   step = -0.05,
   split_vars = c("chr"),
-  core_number = 1,
   include_isolated = FALSE,
-  .skip_plan_setup = FALSE
+  consider_level = FALSE
 )
 }
 \arguments{
@@ -26,14 +25,9 @@ selection process, default is -0.05}
 \item{split_vars}{Character vector, variables to split data by for parallel processing,
 default is c("chr")}
 
-\item{core_number}{Integer, number of CPU cores to use for parallel processing.
-If set to 1 (default), sequential processing is used. If greater than 1,
-parallel processing with the specified number of cores is enabled}
-
 \item{include_isolated}{Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE}
 
-\item{.skip_plan_setup}{Logical, internal parameter to skip future plan setup.
-Used when called from hierarchy function. Default is FALSE}
+\item{consider_level}{Logical, whether to consider meta.tool_level when filtering overlaps, default is FALSE}
 }
 \value{
 Data frame containing both the original tool TADs and consensus TADs with additional
@@ -44,10 +38,12 @@ at which each consensus TAD was selected)
 This function generates consensus TADs from predictions made by multiple tools.
 It applies an iterative threshold approach to select optimal non-overlapping TADs
 that represent the consensus across different prediction methods.
+
+Parallel processing is controlled by the future framework. Configure it before calling:
+future::plan(future::multisession(workers = 4))
 }
 \examples{
 \dontrun{
-# Prepare input data with predictions from multiple tools
 tad_data <- data.frame(
   chr = rep("chr1", 6),
   start = c(10000, 20000, 50000, 12000, 22000, 48000),
@@ -55,7 +51,7 @@ tad_data <- data.frame(
   meta.tool = c(rep("tool1", 3), rep("tool2", 3))
 )
 
-# Generate consensus TADs with default parameters
+# Sequential (default)
 consensus_results <- generate_tad_consensus(tad_data)
 
 # Generate consensus TADs with custom threshold values
@@ -64,6 +60,12 @@ consensus_results <- generate_tad_consensus(
   threshold = 0.8,
   step = -0.05
 )
+
+# Parallel controlled by environment
+options(future.globals.maxSize = 100 * 1024^3)
+future::plan(future::multisession(workers = 4))
+consensus_results <- generate_tad_consensus(tad_data)
+future::plan(future::sequential)
 }
 
 }

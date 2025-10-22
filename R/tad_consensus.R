@@ -5,6 +5,9 @@
 #' It applies an iterative threshold approach to select optimal non-overlapping TADs
 #' that represent the consensus across different prediction methods.
 #'
+#' Parallel processing is controlled by the future framework. Configure it before calling:
+#' future::plan(future::multisession(workers = 4))
+#'
 #' @param df_tools Data frame containing TAD information with columns: chr, start, end, meta.tool
 #'   where meta.tool identifies the prediction tool source
 #' @param threshold Numeric value, the minimum threshold for MoC filtering, default is 0
@@ -12,12 +15,8 @@
 #'   selection process, default is -0.05
 #' @param split_vars Character vector, variables to split data by for parallel processing,
 #'   default is c("chr")
-#' @param core_number Integer, number of CPU cores to use for parallel processing.
-#'   If set to 1 (default), sequential processing is used. If greater than 1,
-#'   parallel processing with the specified number of cores is enabled
 #' @param include_isolated Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE
-#' @param .skip_plan_setup Logical, internal parameter to skip future plan setup.
-#'   Used when called from hierarchy function. Default is FALSE
+#' @param consider_level Logical, whether to consider meta.tool_level when filtering overlaps, default is FALSE
 #'
 #' @return Data frame containing both the original tool TADs and consensus TADs with additional
 #'   columns: score_source (metadata about contributing tools), threshold (the MoC threshold
@@ -26,10 +25,10 @@
 #' @importFrom dplyr bind_rows mutate full_join select
 #' @importFrom purrr discard
 #' @importFrom tidyr replace_na
+#' @importFrom furrr future_map2_dfr
 #'
 #' @examples
 #' \dontrun{
-#' # Prepare input data with predictions from multiple tools
 #' tad_data <- data.frame(
 #'   chr = rep("chr1", 6),
 #'   start = c(10000, 20000, 50000, 12000, 22000, 48000),
@@ -37,7 +36,7 @@
 #'   meta.tool = c(rep("tool1", 3), rep("tool2", 3))
 #' )
 #'
-#' # Generate consensus TADs with default parameters
+#' # Sequential (default)
 #' consensus_results <- generate_tad_consensus(tad_data)
 #'
 #' # Generate consensus TADs with custom threshold values
@@ -46,6 +45,12 @@
 #'   threshold = 0.8,
 #'   step = -0.05
 #' )
+#'
+#' # Parallel controlled by environment
+#' options(future.globals.maxSize = 100 * 1024^3)
+#' future::plan(future::multisession(workers = 4))
+#' consensus_results <- generate_tad_consensus(tad_data)
+#' future::plan(future::sequential)
 #' }
 #'
 #' @export
@@ -53,11 +58,42 @@ generate_tad_consensus <- function(df_tools,
                                    threshold = 0,
                                    step = -0.05,
                                    split_vars = c("chr"),
-                                   core_number = 1,
                                    include_isolated = FALSE,
-                                   .skip_plan_setup = FALSE) {
+                                   consider_level = FALSE) {
   if (length(unique(df_tools$meta.tool)) == 1) {
-    return(df_tools)
+    if (threshold == 0 && include_isolated) {
+      has_level <- "meta.tool_level" %in% names(df_tools) &&
+                   any(!is.na(df_tools$meta.tool_level))
+
+      if (consider_level && has_level) {
+        return(df_tools %>%
+          dplyr::mutate(
+            score_source = dplyr::case_when(
+              !is.na(meta.tool_level) ~ paste0(meta.tool, "(", meta.tool_level, ")_1"),
+              TRUE ~ paste0(meta.tool, "_1")
+            ),
+            threshold = 0
+          ) %>%
+          dplyr::select(dplyr::all_of(split_vars), start, end, score_source, threshold)
+        )
+      } else {
+        return(df_tools %>%
+          dplyr::mutate(
+            score_source = paste0(meta.tool, "_1"),
+            threshold = 0
+          ) %>%
+          dplyr::select(dplyr::all_of(split_vars), start, end, score_source, threshold)
+        )
+      }
+    } else {
+      return(tibble::tibble(
+        chr = character(0),
+        start = integer(0),
+        end = integer(0),
+        score_source = character(0),
+        threshold = numeric(0)
+      ))
+    }
   }
 
   moc_cut_c <- round(seq(1, threshold, step), 2)
@@ -68,43 +104,20 @@ generate_tad_consensus <- function(df_tools,
   data_input <- dplyr::group_split(df_grouped, .keep = TRUE)
   keys       <- dplyr::group_keys(df_grouped)
 
-  if (core_number > 1) {
-    if (!.skip_plan_setup) {
-      old_plan <- future::plan()
-      on.exit(future::plan(old_plan), add = TRUE)
-
-      options(future.globals.maxSize = 100 * 1024^3)
-      future::plan(future::multisession(workers = core_number))
+  df_consensus <- furrr::future_map2_dfr(
+    data_input, seq_len(nrow(keys)),
+    ~ {
+      res <- select_tads_by_threshold_series(
+        .x,
+        threshold_c = moc_cut_c,
+        include_threshold = TRUE,
+        considering_width = TRUE,
+        include_isolated = include_isolated,
+        consider_level = consider_level
+      )
+      dplyr::bind_cols(dplyr::select(keys[.y, , drop = FALSE], -chr), res)
     }
-
-    df_consensus <- furrr::future_map2_dfr(
-      data_input, seq_len(nrow(keys)),
-      ~ {
-        res <- select_tads_by_threshold_series(
-          .x,
-          threshold_c = moc_cut_c,
-          include_threshold = TRUE,
-          considering_width = TRUE,
-          include_isolated = include_isolated
-        )
-        dplyr::bind_cols(dplyr::select(keys[.y, , drop = FALSE], -chr), res)
-      }
-    )
-  } else {
-    df_consensus <- purrr::map2_dfr(
-      data_input, seq_len(nrow(keys)),
-      ~ {
-        res <- select_tads_by_threshold_series(
-          .x,
-          threshold_c = moc_cut_c,
-          include_threshold = TRUE,
-          considering_width = TRUE,
-          include_isolated = include_isolated
-        )
-        dplyr::bind_cols(dplyr::select(keys[.y, , drop = FALSE], -chr), res)
-      }
-    )
-  }
+  )
 
   df_consensus %>%
     dplyr::select(dplyr::all_of(split_vars),

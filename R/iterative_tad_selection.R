@@ -11,6 +11,7 @@
 #' @param include_threshold Logical, whether to include TADs equal to the threshold, default is TRUE
 #' @param considering_width Logical, whether to adjust scores by TAD width, default is TRUE
 #' @param include_isolated Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE
+#' @param consider_level Logical, whether to consider meta.tool_level when filtering overlaps, default is FALSE
 #'
 #' @return Data frame containing the selected optimal non-overlapping TADs
 #'
@@ -39,7 +40,10 @@
 #' @export
 select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
                                             include_threshold = TRUE, considering_width = TRUE,
-                                            include_isolated = FALSE) {
+                                            include_isolated = FALSE, consider_level = FALSE) {
+  has_level <- "meta.tool_level" %in% names(tb_tool_sel) &&
+               any(!is.na(tb_tool_sel$meta.tool_level))
+
   threshold_c <- sort(threshold_c, decreasing = TRUE)
   res_list <- vector("list", length(threshold_c))
   data_input_list <- vector("list", length(threshold_c))
@@ -47,7 +51,7 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
   for (i in seq(threshold_c)) {
     res_list[[i]] <- select_tads_by_threshold(data_input_list[[i]],
                                               threshold_c[i], include_threshold, considering_width,
-                                              include_isolated) %>%
+                                              include_isolated, consider_level) %>%
       dplyr::mutate(threshold = threshold_c[i])
     if (NROW(res_list[[i]]) == 0) {
       data_input_list[[i + 1]] <- data_input_list[[i]]
@@ -55,9 +59,17 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
     }
     gr01 <- GenomicRanges::makeGRangesFromDataFrame(data_input_list[[i]], keep.extra.columns = TRUE)
     gr02 <- GenomicRanges::makeGRangesFromDataFrame(res_list[[i]], keep.extra.columns = TRUE)
-    data_input_list[[i + 1]] <- gr01[!IRanges::overlapsAny(gr01, gr02)] %>%
-      tibble::as_tibble() %>%
-      dplyr::select(chr = seqnames, start, end, meta.tool)
+
+    if (consider_level && has_level) {
+      data_input_list[[i + 1]] <- gr01[!IRanges::overlapsAny(gr01, gr02)] %>%
+        tibble::as_tibble() %>%
+        dplyr::select(chr = seqnames, start, end, meta.tool, meta.tool_level)
+    } else {
+      data_input_list[[i + 1]] <- gr01[!IRanges::overlapsAny(gr01, gr02)] %>%
+        tibble::as_tibble() %>%
+        dplyr::select(chr = seqnames, start, end, meta.tool)
+    }
+
     if (NROW(data_input_list[[i + 1]]) == 0) {
       break
     }
@@ -77,6 +89,7 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
 #' @param include_threshold Logical, whether to include TADs equal to the threshold, default is TRUE
 #' @param considering_width Logical, whether to adjust scores by TAD width, default is TRUE
 #' @param include_isolated Logical, whether to include isolated TADs (with no overlaps) when threshold is 0, default is FALSE
+#' @param consider_level Logical, whether to consider meta.tool_level when filtering overlaps, default is FALSE
 #'
 #' @return Data frame containing the selected optimal non-overlapping TADs
 #'
@@ -98,8 +111,9 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
 #'
 #' @export
 select_tads_by_threshold <- function(tb_tool_sel, threshold, include_threshold = TRUE,
-                                     considering_width = TRUE, include_isolated = FALSE) {
-  tad_all <- moc_score_filter(tb_tool_sel, threshold, include_threshold, include_isolated)
+                                     considering_width = TRUE, include_isolated = FALSE,
+                                     consider_level = FALSE) {
+  tad_all <- moc_score_filter(tb_tool_sel, threshold, include_threshold, include_isolated, consider_level)
   if (considering_width) {
     tad_all <- tad_all %>%
       dplyr::mutate(moc_score = moc_score * (end + 1 - start) / 10000)

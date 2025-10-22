@@ -32,7 +32,7 @@
 select_global_optimal_tads <- function(tad_all) {
   if (NROW(tad_all) == 0) {
     return(tibble::tibble(
-      chr = factor(character(0)),
+      chr = character(0),
       start = integer(0),
       end = integer(0),
       moc_score = double(0),

@@ -8,11 +8,13 @@ moc_score_filter(
   tb_tool_sel,
   moc_cut,
   include_moc_cut = TRUE,
-  include_isolated = FALSE
+  include_isolated = FALSE,
+  consider_level = FALSE
 )
 }
 \arguments{
-\item{tb_tool_sel}{Data frame containing TAD coordinates. Must include columns: chr, start, end, meta.tool}
+\item{tb_tool_sel}{Data frame containing TAD coordinates. Must include columns: chr, start, end, meta.tool.
+Optionally can include meta.tool_level for finer tool classification}
 
 \item{moc_cut}{Numeric value, threshold for MoC}
 
@@ -20,6 +22,10 @@ moc_score_filter(
 
 \item{include_isolated}{Logical, whether to include isolated TADs (with no overlaps) when moc_cut is 0.
 These TADs will have moc_score = 0. Default is FALSE}
+
+\item{consider_level}{Logical, whether to consider meta.tool_level when filtering overlaps.
+If TRUE and meta.tool_level exists, different levels of the same tool are treated as different tools.
+Default is FALSE}
 }
 \value{
 Data frame containing merged TAD information with calculated MoC scores and the following columns:
@@ -52,6 +58,24 @@ results <- moc_score_filter(tad_data, moc_cut = 0.1)
 
 # Include isolated TADs when moc_cut is 0
 results_with_isolated <- moc_score_filter(tad_data, moc_cut = 0, include_isolated = TRUE)
+
+# With tool levels
+tad_data_with_level <- data.frame(
+  chr = rep("chr1", 8),
+  start = c(10000, 15000, 20000, 50000, 55000, 15000, 50000, 50000),
+  end = c(30000, 35000, 45000, 70000, 75000, 35000, 70000, 70000),
+  meta.tool = c("tool1", "tool1", "tool2", "tool3", "tool3", "tool2", "tool1", "tool4"),
+  meta.tool_level = c("L1", "L2", NA, "L1", "L2", NA, "L2", NA)
+)
+
+# Without considering levels - tool1(L1) and tool1(L2) are treated as same tool
+results_no_level <- moc_score_filter(tad_data_with_level, moc_cut = 0.1, consider_level = FALSE)
+# Output shows overlaps between tool1, tool2, tool3
+
+# With considering levels - tool1(L1) and tool1(L2) are treated as different tools
+results_with_level <- moc_score_filter(tad_data_with_level, moc_cut = 0.1, consider_level = TRUE)
+# Output shows overlaps between tool1(L1), tool1(L2), tool2, tool3(L1), tool3(L2)
+# score_source will show format like: tool1(L1)_0.5; tool2_0.3
 }
 
 }
