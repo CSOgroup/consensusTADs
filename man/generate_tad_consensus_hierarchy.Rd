@@ -64,7 +64,7 @@ tad_data_with_level <- data.frame(
   meta.tool_level = c("L1", "L2", NA, "L1", "L2", NA, "L2", NA)
 )
 
-result_with_level <- generate_tad_consensus_hierarchy(
+result_hierarchy <- generate_tad_consensus_hierarchy(
   tad_data_with_level,
   max_round = 3,
   consider_level = TRUE

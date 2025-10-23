@@ -36,6 +36,21 @@ consensus_tads <- generate_tad_consensus(
 )
 ```
 
+### `generate_tad_consensus_hierarchy()`
+
+Generates hierarchical consensus TADs through multiple rounds of iteration. In each round, it identifies consensus TADs
+and removes partially overlapping regions from the input data for the next round.
+
+```r
+hierarchical_tads <- generate_tad_consensus_hierarchy(
+  df_tools,              # Data frame with TAD predictions
+  threshold = 0,         # Minimum MoC threshold
+  step = -0.05,          # Step size for threshold iteration
+  max_round = NULL,        # Maximum number of rounds
+  consider_level = TRUE
+)
+```
+
 ### `moc_score_filter()`
 
 Calculates the Measure of Concordance (MoC) between TAD predictions and filters significant overlaps based on a
@@ -67,6 +82,43 @@ custom_consensus <- generate_tad_consensus(
   threshold = 0.3,
   step = -0.1
 )
+
+
+# Enable parallel processing for large datasets
+options(future.globals.maxSize = 10 * 1024^3)
+future::plan(future::multisession(workers = 4))
+
+# Work with tool levels
+tad_data_with_level <- data.frame(
+  chr = rep("chr1", 8),
+  start = c(10000, 15000, 20000, 50000, 55000, 15000, 50000, 80000),
+  end = c(30000, 35000, 45000, 70000, 75000, 35000, 70000, 100000),
+  meta.tool = c("tool1", "tool1", "tool2", "tool3", "tool3", "tool2", "tool1", "tool4"),
+  meta.tool_level = c("L1", "L2", NA, "L1", "L2", NA, "L2", NA)
+)
+
+result_hierarchy <- generate_tad_consensus_hierarchy(
+  tad_data_with_level,
+  max_round = NULL,
+  consider_level = TRUE
+)
+
+# Work without tool levels
+tad_data_with_level <- data.frame(
+  chr = rep("chr1", 8),
+  start = c(10000, 15000, 20000, 50000, 55000, 15000, 50000, 80000),
+  end = c(30000, 35000, 45000, 70000, 75000, 35000, 70000, 100000),
+  meta.tool = c("tool1", "tool1", "tool2", "tool3", "tool3", "tool2", "tool1", "tool4")
+)
+
+result_hierarchy <- generate_tad_consensus_hierarchy(
+  tad_data_with_level,
+  max_round = NULL
+)
+
+future::plan(future::sequential)
+
+
 ```
 
 ## How It Works
@@ -100,4 +152,3 @@ Where:
 - tidyr
 - stringr
 - magrittr
-
