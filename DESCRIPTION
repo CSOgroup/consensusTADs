@@ -1,6 +1,6 @@
 Package: consensusTADs
 Title: Generate Consensus Topologically Associating Domains from Multiple Prediction Tools
-Version: 0.99.0
+Version: 0.99.1
 Authors@R:
     person(given = "Pumin",
            family = "Li",
