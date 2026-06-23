@@ -16,10 +16,12 @@ Description: Integrates Topologically Associating Domains (TADs) predictions
     reliable chromatin domain annotations for downstream genomic analyses.
 License: MIT + file LICENSE
 Encoding: UTF-8
+biocViews: Software, HiC
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     dplyr,
+    furrr,
     GenomicRanges,
     IRanges,
     magrittr,

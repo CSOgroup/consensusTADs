@@ -43,7 +43,6 @@ Parallel processing is controlled by the future framework. Configure it before c
 future::plan(future::multisession(workers = 4))
 }
 \examples{
-\dontrun{
 tad_data <- data.frame(
   chr = rep("chr1", 6),
   start = c(10000, 20000, 50000, 12000, 22000, 48000),
@@ -66,6 +65,5 @@ options(future.globals.maxSize = 100 * 1024^3)
 future::plan(future::multisession(workers = 4))
 consensus_results <- generate_tad_consensus(tad_data)
 future::plan(future::sequential)
-}
 
 }

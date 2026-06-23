@@ -14,7 +14,6 @@
 #' @importFrom tibble tibble
 #'
 #' @examples
-#' \dontrun{
 #' # Prepare input data
 #' tad_data <- data.frame(
 #'   chr = rep("chr1", 4),
@@ -26,7 +25,6 @@
 #'
 #' # Select optimal TADs
 #' optimal_tads <- select_global_optimal_tads(tad_data)
-#' }
 #'
 #' @export
 select_global_optimal_tads <- function(tad_all) {

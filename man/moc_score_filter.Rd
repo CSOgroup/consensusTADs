@@ -44,7 +44,6 @@ intersect.width^2 / (width1 * width2), where intersect.width is the overlap leng
 and width1 and width2 are the lengths of the two regions.
 }
 \examples{
-\dontrun{
 # Prepare input data
 tad_data <- data.frame(
   chr = rep("chr1", 3),
@@ -76,6 +75,5 @@ results_no_level <- moc_score_filter(tad_data_with_level, moc_cut = 0.1, conside
 results_with_level <- moc_score_filter(tad_data_with_level, moc_cut = 0.1, consider_level = TRUE)
 # Output shows overlaps between tool1(L1), tool1(L2), tool2, tool3(L1), tool3(L2)
 # score_source will show format like: tool1(L1)_0.5; tool2_0.3
-}
 
 }

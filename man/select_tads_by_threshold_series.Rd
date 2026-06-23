@@ -36,7 +36,6 @@ TADs with lower thresholds. For each iteration, it removes previously selected T
 from consideration to avoid redundancy.
 }
 \examples{
-\dontrun{
 # Prepare input data
 tad_data <- data.frame(
   chr = rep("chr1", 5),
@@ -50,6 +49,5 @@ selected_tads <- select_tads_by_threshold_series(
   tad_data,
   threshold_c = round(seq(1, 0.2, -0.05), 2)
 )
-}
 
 }

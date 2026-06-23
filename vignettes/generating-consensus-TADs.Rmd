@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(consensusTADs)
 ```
 
 ## Introduction
@@ -56,7 +57,7 @@ The function returns a data frame with the following columns:
 
 The following examples demonstrate how to use the `generate_tad_consensus` function:
 
-```{r, eval=FALSE}
+```{r}
 # Prepare input data with predictions from multiple tools
 tad_data <- data.frame(
   chr = rep("chr1", 6),
@@ -118,4 +119,8 @@ The algorithm uses dynamic programming to select a set of non-overlapping TADs t
 - Input data must contain predictions from at least two different tools (identified by the `meta.tool` column)
 - The threshold parameter defines the minimum required MoC score and can be adjusted based on analysis needs
 - The returned consensus TADs are guaranteed to be non-overlapping
+
+```{r}
+sessionInfo()
+```
 

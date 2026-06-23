@@ -35,7 +35,6 @@ TADs based on the provided MoC threshold, then applying a global optimization
 algorithm to select TADs that maximize the total score without overlaps.
 }
 \examples{
-\dontrun{
 # Prepare input data
 tad_data <- data.frame(
   chr = rep("chr1", 4),
@@ -46,6 +45,5 @@ tad_data <- data.frame(
 
 # Select TADs with threshold 0.2
 selected_tads <- select_tads_by_threshold(tad_data, threshold = 0.2)
-}
 
 }

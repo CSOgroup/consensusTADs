@@ -28,9 +28,15 @@
 #' @importFrom tibble as_tibble
 #'
 #' @examples
-#' \dontrun{
+#' tad_data <- data.frame(
+#'   chr = rep("chr1", 6),
+#'   start = c(10000, 20000, 50000, 12000, 22000, 48000),
+#'   end = c(30000, 45000, 65000, 32000, 43000, 67000),
+#'   meta.tool = c(rep("tool1", 3), rep("tool2", 3))
+#' )
+#'
 #' # Basic usage
-#' result <- generate_tad_consensus_hierarchy(tad_data, max_round = 5)
+#' result <- generate_tad_consensus_hierarchy(tad_data, max_round = 3)
 #'
 #' # Parallel processing
 #' options(future.globals.maxSize = 100 * 1024^3)
@@ -52,7 +58,6 @@
 #'   max_round = 3,
 #'   consider_level = TRUE
 #' )
-#' }
 #'
 #' @export
 generate_tad_consensus_hierarchy <- function(df_tools,

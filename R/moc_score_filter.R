@@ -32,7 +32,6 @@
 #' @importFrom stringr str_split_1
 #'
 #' @examples
-#' \dontrun{
 #' # Prepare input data
 #' tad_data <- data.frame(
 #'   chr = rep("chr1", 3),
@@ -64,7 +63,6 @@
 #' results_with_level <- moc_score_filter(tad_data_with_level, moc_cut = 0.1, consider_level = TRUE)
 #' # Output shows overlaps between tool1(L1), tool1(L2), tool2, tool3(L1), tool3(L2)
 #' # score_source will show format like: tool1(L1)_0.5; tool2_0.3
-#' }
 #'
 #' @export
 moc_score_filter <- function(tb_tool_sel, moc_cut, include_moc_cut = TRUE, include_isolated = FALSE, consider_level = FALSE) {

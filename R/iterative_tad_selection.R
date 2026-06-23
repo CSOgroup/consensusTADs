@@ -21,7 +21,6 @@
 #' @importFrom tibble as_tibble
 #'
 #' @examples
-#' \dontrun{
 #' # Prepare input data
 #' tad_data <- data.frame(
 #'   chr = rep("chr1", 5),
@@ -35,7 +34,6 @@
 #'   tad_data,
 #'   threshold_c = round(seq(1, 0.2, -0.05), 2)
 #' )
-#' }
 #'
 #' @export
 select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
@@ -96,7 +94,6 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
 #' @importFrom dplyr mutate
 #'
 #' @examples
-#' \dontrun{
 #' # Prepare input data
 #' tad_data <- data.frame(
 #'   chr = rep("chr1", 4),
@@ -107,7 +104,6 @@ select_tads_by_threshold_series <- function(tb_tool_sel, threshold_c,
 #'
 #' # Select TADs with threshold 0.2
 #' selected_tads <- select_tads_by_threshold(tad_data, threshold = 0.2)
-#' }
 #'
 #' @export
 select_tads_by_threshold <- function(tb_tool_sel, threshold, include_threshold = TRUE,

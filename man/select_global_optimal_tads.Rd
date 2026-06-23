@@ -19,7 +19,6 @@ by their end coordinates and builds an optimal solution by either including or
 excluding each TAD based on which choice yields the highest total score.
 }
 \examples{
-\dontrun{
 # Prepare input data
 tad_data <- data.frame(
   chr = rep("chr1", 4),
@@ -31,6 +30,5 @@ tad_data <- data.frame(
 
 # Select optimal TADs
 optimal_tads <- select_global_optimal_tads(tad_data)
-}
 
 }
