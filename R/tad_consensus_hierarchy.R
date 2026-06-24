@@ -68,6 +68,10 @@ generate_tad_consensus_hierarchy <- function(df_tools,
                                              include_isolated = FALSE,
                                              consider_level = FALSE) {
 
+  if (!is.character(df_tools$chr)) {
+    df_tools$chr <- as.character(df_tools$chr)
+  }
+
   consensus_list <- list()
   df_remaining <- df_tools
   round_num <- 1
