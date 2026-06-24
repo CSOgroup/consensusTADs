@@ -145,6 +145,8 @@ Where:
 ## Dependencies
 
 - dplyr
+- furrr
+- future
 - GenomicRanges
 - IRanges
 - tibble
@@ -152,3 +154,11 @@ Where:
 - tidyr
 - stringr
 - magrittr
+
+## Citation
+
+If you use this package, please cite:
+
+Li P#, Hatos A#, Petrovic M, Franceschini GM, Nanni L, Tavernari D, Ciriello G.
+**TADShop: systematic benchmarking and identification of topologically associating domains.**
+*Nature Methods*. 2026 Jun;23(6):1227-1235. doi:10.1038/s41592-026-03100-2. PMID: 42203861.
